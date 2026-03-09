@@ -14,15 +14,8 @@ export const authConfig: NextAuthConfig = {
     signIn: "/login",
   },
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const isAppRoute = nextUrl.pathname.startsWith("/app");
-      const hasNoAuth = nextUrl.searchParams.has("noauth");
-
-      if (isAppRoute && !isLoggedIn && !hasNoAuth) {
-        return false; // Redirect to login
-      }
-      return true;
+    authorized() {
+      return true; // Auth disabled — allow all routes without login
     },
   },
 };

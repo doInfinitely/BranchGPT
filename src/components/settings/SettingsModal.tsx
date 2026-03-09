@@ -12,6 +12,8 @@ export function SettingsModal() {
   const settingsOpen = useUIStore((s) => s.settingsOpen);
   const setSettingsOpen = useUIStore((s) => s.setSettingsOpen);
 
+  const userEmail = useSettingsStore((s) => s.userEmail);
+  const setUserEmail = useSettingsStore((s) => s.setUserEmail);
   const openaiKey = useSettingsStore((s) => s.openaiApiKey);
   const anthropicKey = useSettingsStore((s) => s.anthropicApiKey);
   const activeProvider = useSettingsStore((s) => s.activeProvider);
@@ -75,6 +77,23 @@ export function SettingsModal() {
   return (
     <Modal open={settingsOpen} onClose={() => setSettingsOpen(false)} title="Settings">
       <div className="flex flex-col gap-5 max-h-[70vh] overflow-y-auto pr-1">
+        {/* Email identity */}
+        <section>
+          <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>
+            Your Email
+          </h3>
+          <Input
+            label=""
+            type="email"
+            placeholder="you@example.com"
+            value={userEmail}
+            onChange={(e) => setUserEmail(e.target.value)}
+          />
+          <p className="text-xs mt-1" style={{ color: "var(--color-text-tertiary)" }}>
+            Optional. Saved locally to identify your chats for export/import.
+          </p>
+        </section>
+
         {/* API Keys */}
         <section>
           <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--color-text)" }}>
