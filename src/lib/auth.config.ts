@@ -4,6 +4,7 @@ import type { NextAuthConfig } from "next-auth";
 // Edge-compatible auth config (no Prisma adapter, no Nodemailer)
 // Used by middleware for session checks
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   providers: [
     GitHub({
       clientId: process.env.GITHUB_ID ?? "",
