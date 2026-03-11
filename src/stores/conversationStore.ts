@@ -40,6 +40,7 @@ interface ConversationState {
   ) => NodeId;
 
   appendToNode: (nodeId: NodeId, chunk: string) => void;
+  appendReasoning: (nodeId: NodeId, chunk: string) => void;
   setNodeStatus: (nodeId: NodeId, status: NodeStatus) => void;
   setNodeContent: (nodeId: NodeId, content: string) => void;
   persistNode: (nodeId: NodeId) => Promise<void>;
@@ -132,6 +133,7 @@ export const useConversationStore = create<ConversationState>()(
         childIds: [],
         role: "user",
         content,
+        reasoning: "",
         attachments: [],
         provider,
         model,
@@ -172,6 +174,7 @@ export const useConversationStore = create<ConversationState>()(
         childIds: [],
         role: "assistant",
         content: "",
+        reasoning: "",
         attachments: [],
         provider,
         model,
@@ -193,6 +196,14 @@ export const useConversationStore = create<ConversationState>()(
       set((state) => {
         if (state.nodes[nodeId]) {
           state.nodes[nodeId].content += chunk;
+        }
+      });
+    },
+
+    appendReasoning(nodeId, chunk) {
+      set((state) => {
+        if (state.nodes[nodeId]) {
+          state.nodes[nodeId].reasoning += chunk;
         }
       });
     },

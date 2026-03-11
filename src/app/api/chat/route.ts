@@ -125,23 +125,42 @@ function streamOpenAI(
     async start(controller) {
       try {
         const client = new OpenAI({ apiKey });
+        const isReasoning = /^(o[34]|gpt-5)/.test(model);
         const response = await client.chat.completions.create({
           model,
           messages: openaiMessages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
           stream: true,
           stream_options: { include_usage: true },
-          temperature: params.temperature,
-          max_tokens: params.maxTokens,
-          top_p: params.topP,
-          frequency_penalty: params.frequencyPenalty,
-          presence_penalty: params.presencePenalty,
+          ...(isReasoning
+            ? { max_completion_tokens: params.maxTokens }
+            : {
+                temperature: params.temperature,
+                max_tokens: params.maxTokens,
+                top_p: params.topP,
+                frequency_penalty: params.frequencyPenalty,
+                presence_penalty: params.presencePenalty,
+              }),
         });
 
         let promptTokens = 0;
         let completionTokens = 0;
 
         for await (const chunk of response) {
-          const content = chunk.choices[0]?.delta?.content;
+          const delta = chunk.choices[0]?.delta;
+          // Debug: log delta keys to see if reasoning_content is present
+          if (delta && Object.keys(delta).length > 0) {
+            const keys = Object.keys(delta).filter(k => (delta as Record<string, unknown>)[k] != null);
+            if (keys.length > 0 && !keys.every(k => k === 'role')) {
+              console.log('[stream delta keys]', keys);
+            }
+          }
+          const reasoning = (delta as Record<string, unknown>)?.reasoning_content;
+          if (reasoning && typeof reasoning === 'string') {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ reasoning })}\n\n`)
+            );
+          }
+          const content = delta?.content;
           if (content) {
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ content })}\n\n`)

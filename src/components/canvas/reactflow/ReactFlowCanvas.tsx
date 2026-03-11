@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -107,11 +107,15 @@ function ReactFlowCanvasInner() {
     );
   }, [visibleNodes, activeConversationId, selectedNodeIds, contextNodeIds, activePathIds, composeParentId, handleBranch, collapsedNodeIds, toggleCollapse]);
 
-  // Re-fit view when node count changes
+  // Only fit view on initial load or conversation switch, not on every new message
+  const prevConvId = useRef(activeConversationId);
   useEffect(() => {
-    const timeout = setTimeout(() => fitView({ padding: 0.3, duration: 200 }), 50);
-    return () => clearTimeout(timeout);
-  }, [flowNodes.length, fitView]);
+    if (prevConvId.current !== activeConversationId) {
+      prevConvId.current = activeConversationId;
+      const timeout = setTimeout(() => fitView({ padding: 0.3, duration: 200 }), 50);
+      return () => clearTimeout(timeout);
+    }
+  }, [activeConversationId, fitView]);
 
   // Cmd/Ctrl+click for multi-select, plain click for single select + branch
   const handleNodeClick = useCallback(
@@ -166,6 +170,7 @@ function ReactFlowCanvasInner() {
         nodesDraggable={false}
         nodesConnectable={false}
         edgesFocusable={false}
+        zoomOnDoubleClick={false}
       >
         <Background
           variant={BackgroundVariant.Dots}

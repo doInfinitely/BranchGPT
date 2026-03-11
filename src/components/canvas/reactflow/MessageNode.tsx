@@ -1,14 +1,25 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { FlowMessageNode } from "@/types";
+import { useUIStore } from "@/stores/uiStore";
+import { MarkdownContent } from "@/components/ui/MarkdownContent";
 
 function MessageNodeComponent({ data }: NodeProps<FlowMessageNode>) {
   const { message, isSelected, isOnActivePath, isContextNode, isCollapsed, onBranch, onToggleCollapse } = data;
+  const setFocusedNodeId = useUIStore((s) => s.setFocusedNodeId);
   const isUser = message.role === "user";
   const isStreaming = message.status === "streaming";
   const isError = message.status === "error";
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setFocusedNodeId(message.id);
+    },
+    [message.id, setFocusedNodeId]
+  );
 
   const bgColor = isUser
     ? "var(--color-node-user)"
@@ -23,6 +34,7 @@ function MessageNodeComponent({ data }: NodeProps<FlowMessageNode>) {
 
   return (
     <div
+      onDoubleClick={handleDoubleClick}
       className="relative rounded-xl px-3 py-2 shadow-sm transition-all"
       style={{
         backgroundColor: bgColor,
@@ -121,9 +133,35 @@ function MessageNodeComponent({ data }: NodeProps<FlowMessageNode>) {
             </div>
           )}
 
+          {/* Reasoning (collapsible) */}
+          {message.reasoning && (
+            <details className="mb-1 nowheel nopan nodrag">
+              <summary
+                className="text-[9px] cursor-pointer select-none"
+                style={{ color: "var(--color-text-tertiary)" }}
+              >
+                Reasoning ({Math.ceil(message.reasoning.length / 4)} tokens)
+              </summary>
+              <div
+                className="mt-0.5 max-h-[150px] overflow-y-auto rounded border px-2 py-1 text-[10px] leading-relaxed whitespace-pre-wrap break-words"
+                style={{
+                  borderColor: "var(--color-border)",
+                  backgroundColor: "var(--color-bg-tertiary)",
+                  color: "var(--color-text-secondary)",
+                }}
+              >
+                {message.reasoning}
+              </div>
+            </details>
+          )}
+
           {/* Content */}
-          <div className="text-xs leading-relaxed whitespace-pre-wrap break-words max-h-[300px] overflow-y-auto nowheel">
-            {message.content || (isStreaming ? "..." : "")}
+          <div className="text-xs leading-relaxed break-words max-h-[300px] overflow-y-auto nowheel prose-node">
+            {message.content ? (
+              <MarkdownContent content={message.content} />
+            ) : (
+              isStreaming ? "..." : ""
+            )}
             {isError && (
               <span className="text-[var(--color-error)]"> (Error)</span>
             )}

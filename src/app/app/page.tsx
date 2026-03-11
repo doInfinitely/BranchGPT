@@ -4,6 +4,7 @@ import { useEffect, useCallback } from "react";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import { GraphCanvas } from "@/components/canvas/GraphCanvas";
 import { SettingsModal } from "@/components/settings/SettingsModal";
+import { MessageDetailModal } from "@/components/canvas/MessageDetailModal";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useUIStore } from "@/stores/uiStore";
 
@@ -93,6 +94,7 @@ export default function AppPage() {
       </div>
 
       <SettingsModal />
+      <MessageDetailModal />
     </div>
   );
 }

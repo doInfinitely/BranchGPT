@@ -9,6 +9,7 @@ interface UIState {
   hiddenNodeIds: Set<string>;
   previewRestoreIds: Set<string>;
   collapsedNodeIds: Set<string>;
+  focusedNodeId: string | null;
 
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
@@ -20,6 +21,7 @@ interface UIState {
   restoreAllNodes: () => void;
   setPreviewRestoreIds: (ids: Set<string>) => void;
   toggleCollapse: (id: string) => void;
+  setFocusedNodeId: (id: string | null) => void;
 }
 
 export const useUIStore = create<UIState>()((set, get) => {
@@ -35,6 +37,7 @@ export const useUIStore = create<UIState>()((set, get) => {
   hiddenNodeIds: new Set<string>(),
   previewRestoreIds: new Set<string>(),
   collapsedNodeIds: new Set<string>(),
+  focusedNodeId: null,
 
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
@@ -62,5 +65,6 @@ export const useUIStore = create<UIState>()((set, get) => {
       else next.add(id);
       return { collapsedNodeIds: next };
     }),
+  setFocusedNodeId: (id) => set({ focusedNodeId: id }),
   };
 });

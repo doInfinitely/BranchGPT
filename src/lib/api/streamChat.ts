@@ -22,6 +22,7 @@ export interface StreamChatParams {
   apiKey: string;
   keyMode?: "byok" | "managed";
   onChunk: (chunk: string) => void;
+  onReasoning?: (chunk: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
   signal?: AbortSignal;
@@ -34,6 +35,7 @@ export async function streamChat({
   generationParams,
   apiKey,
   onChunk,
+  onReasoning,
   onDone,
   onError,
   signal,
@@ -92,6 +94,9 @@ export async function streamChat({
           }
           try {
             const parsed = JSON.parse(data);
+            if (parsed.reasoning && onReasoning) {
+              onReasoning(parsed.reasoning);
+            }
             if (parsed.content) {
               onChunk(parsed.content);
             }

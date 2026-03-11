@@ -31,6 +31,7 @@ function ComposeNodeComponent({ data }: NodeProps<FlowComposeNode>) {
   const addUserMessage = useConversationStore((s) => s.addUserMessage);
   const addAssistantNode = useConversationStore((s) => s.addAssistantNode);
   const appendToNode = useConversationStore((s) => s.appendToNode);
+  const appendReasoning = useConversationStore((s) => s.appendReasoning);
   const setNodeStatus = useConversationStore((s) => s.setNodeStatus);
   const persistNode = useConversationStore((s) => s.persistNode);
   const getAncestorChain = useConversationStore((s) => s.getAncestorChain);
@@ -109,6 +110,7 @@ function ComposeNodeComponent({ data }: NodeProps<FlowComposeNode>) {
         generationParams,
         apiKey,
         signal: abortController.signal,
+        onReasoning: (chunk) => appendReasoning(assistantNodeId, chunk),
         onChunk: (chunk) => appendToNode(assistantNodeId, chunk),
         onDone: () => {
           setNodeStatus(assistantNodeId, "complete");
@@ -164,13 +166,15 @@ function ComposeNodeComponent({ data }: NodeProps<FlowComposeNode>) {
     if (activeBranches.length === 0) return;
 
     const finalConvId = convId!;
-    await Promise.all(
-      activeBranches.map((b) => sendBranch(b.text, b.id, finalConvId))
-    );
 
+    // Clear input immediately so the compose node doesn't duplicate the new user node
     setSharedPrefix("");
     setBranches([{ id: String(Date.now()), text: "", attachments: [] }]);
     setSharedAttachments([]);
+
+    await Promise.all(
+      activeBranches.map((b) => sendBranch(b.text, b.id, finalConvId))
+    );
   }, [
     apiKey, activeConversationId, branches, sharedPrefix, nodes,
     provider, model, createConversation, updateConversationTitle, sendBranch,

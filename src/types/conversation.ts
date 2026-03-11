@@ -21,6 +21,7 @@ export interface MessageNode {
   childIds: NodeId[];
   role: Role;
   content: string;
+  reasoning: string;
   attachments: Attachment[];
   provider: Provider;
   model: string;

@@ -3,9 +3,20 @@ import type { MessageNode, NodeId } from "@/types";
 import type { FlowNode, FlowEdge, MessageNodeData, ComposeNodeData } from "@/types";
 
 const NODE_WIDTH = 280;
-const NODE_HEIGHT = 120;
+const COLLAPSED_NODE_HEIGHT = 50;
+const MIN_NODE_HEIGHT = 80;
+const MAX_NODE_HEIGHT = 360;
 const COMPOSE_NODE_WIDTH = 320;
 const COMPOSE_NODE_HEIGHT = 160;
+
+function estimateNodeHeight(node: MessageNode, isCollapsed: boolean): number {
+  if (isCollapsed) return COLLAPSED_NODE_HEIGHT;
+  // ~16px per line at 280px width, ~45 chars per line, plus header (~30px) + padding (~20px)
+  const lines = Math.ceil(node.content.length / 45);
+  const contentHeight = Math.min(lines * 16, 300);
+  const attachmentHeight = node.attachments.length > 0 ? 44 : 0;
+  return Math.max(MIN_NODE_HEIGHT, Math.min(contentHeight + 50 + attachmentHeight, MAX_NODE_HEIGHT));
+}
 
 interface LayoutOptions {
   rankSeparation?: number;
@@ -61,7 +72,8 @@ export function computeLayout(
   g.setDefaultEdgeLabel(() => ({}));
 
   for (const node of convNodes) {
-    g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+    const height = estimateNodeHeight(node, collapsedNodeIds?.has(node.id) ?? false);
+    g.setNode(node.id, { width: NODE_WIDTH, height });
   }
 
   for (const node of convNodes) {
@@ -99,7 +111,7 @@ export function computeLayout(
     flowNodes.push({
       id: node.id,
       type: "message",
-      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
+      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - (pos.height ?? MIN_NODE_HEIGHT) / 2 },
       data: {
         message: node,
         isSelected: selectedNodeIds.has(node.id),

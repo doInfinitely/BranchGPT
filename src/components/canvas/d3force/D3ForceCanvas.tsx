@@ -54,6 +54,7 @@ export function D3ForceCanvas() {
   const addUserMessage = useConversationStore((s) => s.addUserMessage);
   const addAssistantNode = useConversationStore((s) => s.addAssistantNode);
   const appendToNode = useConversationStore((s) => s.appendToNode);
+  const appendReasoning = useConversationStore((s) => s.appendReasoning);
   const setNodeStatus = useConversationStore((s) => s.setNodeStatus);
   const persistNode = useConversationStore((s) => s.persistNode);
   const getAncestorChain = useConversationStore((s) => s.getAncestorChain);
@@ -189,6 +190,7 @@ export function D3ForceCanvas() {
       generationParams,
       apiKey,
       signal: ac.signal,
+      onReasoning: (chunk) => appendReasoning(assistantNodeId, chunk),
       onChunk: (chunk) => appendToNode(assistantNodeId, chunk),
       onDone: () => {
         setNodeStatus(assistantNodeId, "complete");
