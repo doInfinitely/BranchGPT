@@ -19,13 +19,13 @@ if (process.env.EMAIL_SERVER) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
+  ...(prisma ? { adapter: PrismaAdapter(prisma) } : {}),
   providers,
   callbacks: {
     ...authConfig.callbacks,
-    session({ session, user }) {
+    session({ session, user, token }: any) {
       if (session.user) {
-        session.user.id = user.id;
+        session.user.id = user?.id ?? token?.sub ?? "";
       }
       return session;
     },

@@ -1,13 +1,23 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+let _PrismaClient: any;
+let _PrismaPg: any;
 
-function makePrisma() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
-  return new PrismaClient({ adapter });
+try {
+  _PrismaClient = require("@prisma/client").PrismaClient;
+  _PrismaPg = require("@prisma/adapter-pg").PrismaPg;
+} catch {
+  // Dependencies not installed or generated — prisma will be undefined
 }
 
-export const prisma = globalForPrisma.prisma || makePrisma();
+const globalForPrisma = globalThis as unknown as { prisma: any };
+
+function makePrisma(): any {
+  if (!process.env.DATABASE_URL || !_PrismaClient) return undefined;
+  const adapter = new _PrismaPg({ connectionString: process.env.DATABASE_URL });
+  return new _PrismaClient({ adapter });
+}
+
+export const prisma: any = globalForPrisma.prisma || makePrisma();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
