@@ -6,7 +6,6 @@ import { getDefaultModel } from "@/types";
 type KeyMode = "byok" | "managed";
 
 interface SettingsState {
-  userEmail: string;
   openaiApiKey: string;
   anthropicApiKey: string;
   activeProvider: Provider;
@@ -15,7 +14,6 @@ interface SettingsState {
   theme: "light" | "dark";
   keyMode: KeyMode;
 
-  setUserEmail: (email: string) => void;
   setOpenaiApiKey: (key: string) => void;
   setAnthropicApiKey: (key: string) => void;
   setActiveProvider: (provider: Provider) => void;
@@ -28,7 +26,6 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      userEmail: "",
       openaiApiKey: "",
       anthropicApiKey: "",
       activeProvider: "openai",
@@ -40,7 +37,6 @@ export const useSettingsStore = create<SettingsState>()(
       theme: "light",
       keyMode: "byok",
 
-      setUserEmail: (email) => set({ userEmail: email }),
       setOpenaiApiKey: (key) => set({ openaiApiKey: key }),
       setAnthropicApiKey: (key) => set({ anthropicApiKey: key }),
       setActiveProvider: (provider) =>
