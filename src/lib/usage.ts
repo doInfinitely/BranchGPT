@@ -41,9 +41,9 @@ export async function getUserUsage(userId: string) {
     orderBy: { createdAt: "desc" },
   });
 
-  const totalCents = records.reduce((sum, r) => sum + r.costCents, 0);
-  const totalPromptTokens = records.reduce((sum, r) => sum + r.promptTokens, 0);
-  const totalCompletionTokens = records.reduce((sum, r) => sum + r.completionTokens, 0);
+  const totalCents = records.reduce((sum: number, r: any) => sum + r.costCents, 0);
+  const totalPromptTokens = records.reduce((sum: number, r: any) => sum + r.promptTokens, 0);
+  const totalCompletionTokens = records.reduce((sum: number, r: any) => sum + r.completionTokens, 0);
 
   return {
     records,
