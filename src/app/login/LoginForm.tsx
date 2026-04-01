@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const [providers, setProviders] = useState<Record<string, { id: string; name: string }> | null>(null);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/app";
@@ -21,8 +22,10 @@ export function LoginForm() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSending(true);
     await signIn("nodemailer", { email, callbackUrl });
     setEmailSent(true);
+    setSending(false);
   };
 
   return (
@@ -88,9 +91,10 @@ export function LoginForm() {
                 />
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors text-sm cursor-pointer"
+                  disabled={sending}
+                  className="w-full py-2.5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors text-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Send magic link
+                  {sending ? "Sending..." : "Send magic link"}
                 </button>
               </form>
             )
