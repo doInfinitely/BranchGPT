@@ -71,20 +71,18 @@ function ComposeNodeComponent({ data }: NodeProps<FlowComposeNode>) {
   }, [contextNodes]);
 
   const sendBranch = useCallback(
-    async (branchText: string, branchId: string, convId: string) => {
-      const fullText = sharedPrefix
-        ? `${sharedPrefix}\n${branchText}`.trim()
-        : branchText.trim();
+    async (branchText: string, branchId: string, convId: string, sharedNodeId: string | null) => {
+      const text = branchText.trim();
+      if (!text && !sharedNodeId) return;
 
-      if (!fullText) return;
+      // When a shared prefix node exists, branch off it; otherwise use normal parent
+      const attachParent = sharedNodeId
+        ? sharedNodeId
+        : isMultiContext
+          ? selectedNodeIds[selectedNodeIds.length - 1]
+          : parentNodeId;
 
-      // In multi-select mode, attach the new user message to the most recent selected node
-      // but send the gathered context from ALL selected nodes' ancestors
-      const attachParent = isMultiContext
-        ? selectedNodeIds[selectedNodeIds.length - 1]
-        : parentNodeId;
-
-      const userNodeId = addUserMessage(convId, attachParent, fullText, provider, model);
+      const userNodeId = addUserMessage(convId, attachParent, text, provider, model);
       const assistantNodeId = addAssistantNode(convId, userNodeId, provider, model);
 
       // Build messages: multi-select uses gathered context, single uses ancestor chain
@@ -136,9 +134,9 @@ function ComposeNodeComponent({ data }: NodeProps<FlowComposeNode>) {
       });
     },
     [
-      sharedPrefix, parentNodeId, isMultiContext, selectedNodeIds, nodes,
+      parentNodeId, isMultiContext, selectedNodeIds, nodes,
       provider, model, generationParams, apiKey,
-      branches.length, addUserMessage, addAssistantNode, appendToNode,
+      branches.length, addUserMessage, addAssistantNode, appendToNode, appendReasoning,
       setNodeStatus, persistNode, getAncestorChain, setComposeParentId, clearSelection,
     ]
   );
@@ -167,13 +165,23 @@ function ComposeNodeComponent({ data }: NodeProps<FlowComposeNode>) {
 
     const finalConvId = convId!;
 
+    // Create a shared prefix node when there are multiple branches with a prefix
+    let sharedNodeId: string | null = null;
+    if (activeBranches.length > 1 && sharedPrefix.trim()) {
+      const sharedParent = isMultiContext
+        ? selectedNodeIds[selectedNodeIds.length - 1]
+        : parentNodeId;
+      sharedNodeId = addUserMessage(finalConvId, sharedParent, sharedPrefix.trim(), provider, model);
+      persistNode(sharedNodeId);
+    }
+
     // Clear input immediately so the compose node doesn't duplicate the new user node
     setSharedPrefix("");
     setBranches([{ id: String(Date.now()), text: "", attachments: [] }]);
     setSharedAttachments([]);
 
     await Promise.all(
-      activeBranches.map((b) => sendBranch(b.text, b.id, finalConvId))
+      activeBranches.map((b) => sendBranch(b.text, b.id, finalConvId, sharedNodeId))
     );
   }, [
     apiKey, activeConversationId, branches, sharedPrefix, nodes,

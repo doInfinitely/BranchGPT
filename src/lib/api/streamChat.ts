@@ -136,6 +136,8 @@ export function buildMessagesFromChain(
   for (const node of chain) {
     if (node.role === "system") continue;
 
+    let content: MessageContent;
+
     if (node.attachments.length > 0) {
       // Build multi-modal content blocks
       const blocks: ContentBlock[] = [];
@@ -169,9 +171,27 @@ export function buildMessagesFromChain(
         }
       }
 
-      messages.push({ role: node.role, content: blocks });
+      content = blocks;
     } else {
-      messages.push({ role: node.role, content: node.content });
+      content = node.content;
+    }
+
+    // Merge consecutive messages with the same role (e.g. shared prefix + branch node)
+    const prev = messages[messages.length - 1];
+    if (prev && prev.role === node.role) {
+      if (typeof prev.content === "string" && typeof content === "string") {
+        prev.content = prev.content + "\n\n" + content;
+      } else {
+        const prevBlocks = typeof prev.content === "string"
+          ? [{ type: "text", text: prev.content } as ContentBlock]
+          : prev.content;
+        const curBlocks = typeof content === "string"
+          ? [{ type: "text", text: content } as ContentBlock]
+          : content;
+        prev.content = [...prevBlocks, ...curBlocks];
+      }
+    } else {
+      messages.push({ role: node.role, content });
     }
   }
 
